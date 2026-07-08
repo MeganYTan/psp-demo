@@ -1,0 +1,7 @@
+name: service-provider-demo
+runtime: nodejs
+description: >
+  Demos the Pulumi Service provider end to end: creates an org team, adds an
+  existing org member to it, creates a stack and grants the team edit access
+  to it, and grants the team open access to the ESC environment created by
+  the esc-aws-oidc project.

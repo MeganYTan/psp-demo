@@ -1,0 +1,6 @@
+name: esc-aws-oidc
+runtime: nodejs
+description: >
+  AWS-side OIDC trust plus a Pulumi ESC environment that uses fn::open::aws-login
+  to hand out short-lived AWS credentials. org/role/environment names self-derive
+  per stack, so a new stack needs no config beyond aws:region/aws:profile.
