@@ -2,7 +2,8 @@
   "name": "service-provider-demo",
   "main": "index.ts",
   "devDependencies": {
-    "@types/node": "^20"
+    "@types/node": "^20",
+    "typescript": "^6.0.3"
   },
   "dependencies": {
     "@pulumi/pulumi": "^3.250.0",

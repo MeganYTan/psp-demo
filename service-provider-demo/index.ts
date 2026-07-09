@@ -57,5 +57,45 @@ const escEnvironmentPermission = new service.TeamEnvironmentPermission("demo-esc
   permission: service.EnvironmentPermission.Open,
 }, { dependsOn: team });
 
+// 5. Add a "demo-team" tag to the demo stack so it can be matched by tag-based roles.
+const demoStackTag = new service.StackTag("demo-team-tag", {
+  organization: orgName,
+  project: demoProjectName,
+  stack: demoStackName,
+  name: "demo-team",
+  value: "true",
+}, { dependsOn: [demoStack] });
+
+// 6. Create a custom role that grants write access to any stack tagged with "demo-team".
+// The permissions tree uses a PermissionDescriptorCondition with a PermissionExpressionHasTag
+// to dynamically match any stack that carries the "demo-team" tag key, regardless of value.
+const demoTeamWriteRole = new service.OrganizationRole("demo-team-write-role", {
+  organizationName: orgName,
+  name: `${teamName}-write`,
+  description: "Grants write access to any stack tagged with 'demo-team'.",
+  permissions: {
+    "__type": "PermissionDescriptorCondition",
+    "condition": {
+      "__type": "PermissionExpressionHasTag",
+      "context": {
+        "__type": "PermissionExpressionStack",
+      },
+      "key": "demo-team",
+    },
+    "subNode": {
+      "__type": "PermissionDescriptorAllow",
+      "permissions": ["stack:write"],
+    },
+  },
+});
+
+// 7. Assign the write role to the demo team so all team members inherit the permission.
+const demoTeamRoleAssignment = new service.TeamRoleAssignment("demo-team-role-assignment", {
+  organizationName: orgName,
+  teamName: teamName,
+  roleId: demoTeamWriteRole.roleId,
+}, { dependsOn: [team, demoTeamWriteRole] });
+
 export const createdTeamName = teamName;
 export const stackUrl = pulumi.interpolate`${orgName}/${demoProjectName}/${demoStackName}`;
+export const writeRoleId = demoTeamWriteRole.roleId;
