@@ -39,13 +39,13 @@ const demoStack = new service.Stack("demo-stack", {
   stackName: demoStackName,
 });
 
-// 3b. Grant the team edit permission to the demo stack.
+// 3b. Grant the team read permission to the demo stack.
 const demoStackPermission = new service.TeamStackPermission("demo-stack-permission", {
   organization: orgName,
   project: demoProjectName,
   stack: demoStackName,
   team: teamName,
-  permission: service.TeamStackPermissionScope.Edit,
+  permission: service.TeamStackPermissionScope.Read,
 }, { dependsOn: [team, demoStack] });
 
 // 4. Grant the team permission to open the ESC environment created by the esc-aws-oidc project's stack.
