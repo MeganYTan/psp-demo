@@ -4,9 +4,11 @@ import * as service from "@pulumi/pulumiservice";
 
 const config = new pulumi.Config();
 const orgName = pulumi.getOrganization();
+console.log(orgName);
+
 // OIDC settings
 const issuerHost = "api.pulumi.com/oidc";
-const audience = orgName;
+const audience = `aws:${orgName}`;
 const awsRegion = config.get("awsRegion") || "us-west-2";
 
 // This is an existing OIDC provider because the AWS account is shared across many Pulumi orgs.
@@ -42,9 +44,10 @@ const rolePolicyAttachment = new aws.iam.RolePolicyAttachment("pulumi-onboarding
 });
 
 // Create the ESC environment with AWS OIDC configured.
-const environment = new service.Environment("aws-oidc-onboarding", {
+const environment = new service.Environment("aws-oidc", {
+  name: "dev",
   organization: orgName,
-  project: "default",
+  project: "aws-oidc",
   yaml: role.arn.apply(arn => new pulumi.asset.StringAsset(`values:
   aws:
     login:

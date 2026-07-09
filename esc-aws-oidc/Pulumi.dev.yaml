@@ -1,5 +1,3 @@
 config:
   aws:region: us-west-2
   aws:profile: pulumi-ce
-  esc-aws-oidc:roleName: pulumi-onboarding-oidc-role
-  esc-aws-oidc:environmentName: aws-oidc-onboarding

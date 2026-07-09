@@ -1,8 +1,4 @@
 config:
-  # Existing Pulumi Cloud usernames in the man-demo org - add or swap entries
-  # if you'd rather demo with different teammates.
   service-provider-demo:memberUsernames:
     - MeganYTan
-  # Matches the name the team was already created with, so this doesn't
-  # trigger a replace on the next `pulumi up`.
   service-provider-demo:teamName: service-provider-demo-team-dev

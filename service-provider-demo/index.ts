@@ -3,7 +3,6 @@ import * as service from "@pulumi/pulumiservice";
 
 const config = new pulumi.Config();
 const orgName = pulumi.getOrganization();
-
 // Configure the members of this organization to be added to the new team
 const memberUsernames = config.requireObject<string[]>("memberUsernames");
 
