@@ -12,6 +12,16 @@ pulumi do aws:iam/openIdConnectProvider:OpenIdConnectProvider read \
   echo ']'
 } > oidc-update.pcl
 
+
+{
+  echo 'url = "https://api.pulumi.com/oidc"'
+  echo 'clientIdLists = ['
+  jq -r \
+    '(.clientIdLists + ["aws:mtan-psp-demo-2"])[] | "  \(tojson),"' \
+    oidc-provider.json
+  echo ']'
+} > oidc-update.pcl
+
 pulumi do aws:iam/openIdConnectProvider:OpenIdConnectProvider patch \
   "$ARN" \
   --input-file oidc-update.pcl \

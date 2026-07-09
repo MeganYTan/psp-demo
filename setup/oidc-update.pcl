@@ -17,6 +17,7 @@ clientIdLists = [
   "aws:menfin-team",
   "aws:motherland-money",
   "aws:mtan",
+  "aws:mtan-psp-demo",
   "aws:pequod",
   "aws:piers-demo",
   "aws:pierskarsenbarg",
