@@ -13,7 +13,7 @@ const teamName = config.require("teamName");
 const demoProjectName = config.get("demoProjectName") || "service-provider-demo-app";
 const demoStackName = config.get("demoStackName") || `service-provider-demo-stack`;
 
-// Get the reference to the esc-aws-oidc project's stack, 
+// Get the reference to the esc-aws-oidc project's stack,
 // so this stack can grant the new team access to the ESC environment that stack created.
 const escStackRef = config.get("escStackReference") || `${orgName}/esc-aws-oidc/dev`;
 const escStack = new pulumi.StackReference("esc-aws-oidc-stack", { name: escStackRef });
@@ -39,14 +39,44 @@ const demoStack = new service.Stack("demo-stack", {
   stackName: demoStackName,
 });
 
-// 3b. Grant the team read permission to the demo stack.
-const demoStackPermission = new service.TeamStackPermission("demo-stack-permission", {
+// 3b. Tag the demo stack with "demo-team" so that the tag-based role below can match it.
+const demoStackTag = new service.StackTag("demo-stack-tag", {
   organization: orgName,
   project: demoProjectName,
   stack: demoStackName,
-  team: teamName,
-  permission: service.TeamStackPermissionScope.Read,
-}, { dependsOn: [team, demoStack] });
+  name: "demo-team",
+  value: "true",
+}, { dependsOn: [demoStack] });
+
+// 3c. Create a custom role that grants stack:read to any stack carrying the "demo-team" tag.
+//     The permission descriptor uses a PermissionDescriptorCondition wrapping a
+//     PermissionExpressionHasTag condition — access is granted dynamically to every stack
+//     that has the tag, rather than being pinned to a single stack ID.
+const demoTeamRole = new service.OrganizationRole("demo-team-role", {
+  organizationName: orgName,
+  name: "demo-team-stack-access",
+  description: "Grants stack:read to any stack tagged with 'demo-team'.",
+  permissions: {
+    "__type": "PermissionDescriptorCondition",
+    "condition": {
+      "__type": "PermissionExpressionHasTag",
+      "context": { "__type": "PermissionExpressionStack" },
+      "key": "demo-team",
+    },
+    "subNode": {
+      "__type": "PermissionDescriptorAllow",
+      "permissions": ["stack:read"],
+    },
+  },
+});
+
+// 3d. Assign the tag-based role to the team.
+//     All team members will automatically gain stack:read on any stack tagged "demo-team".
+const teamRoleAssignment = new service.TeamRoleAssignment("demo-team-role-assignment", {
+  organizationName: orgName,
+  teamName: teamName,
+  roleId: demoTeamRole.roleId,
+}, { dependsOn: [team, demoTeamRole] });
 
 // 4. Grant the team permission to open the ESC environment created by the esc-aws-oidc project's stack.
 const escEnvironmentPermission = new service.TeamEnvironmentPermission("demo-esc-environment-permission", {
