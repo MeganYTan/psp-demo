@@ -39,14 +39,57 @@ const demoStack = new service.Stack("demo-stack", {
   stackName: demoStackName,
 });
 
-// 3b. Grant the team edit permission to the demo stack.
-const demoStackPermission = new service.TeamStackPermission("demo-stack-permission", {
+// 3b. Tag the demo stack with "demo-team" to mark it as owned by the demo team.
+// This tag is used by the role below to dynamically grant access.
+const demoStackTag = new service.StackTag("demo-stack-tag", {
   organization: orgName,
   project: demoProjectName,
   stack: demoStackName,
-  team: teamName,
-  permission: service.TeamStackPermissionScope.Edit,
-}, { dependsOn: [team, demoStack] });
+  name: "demo-team",
+  value: "true",
+}, { dependsOn: [demoStack] });
+
+// 3c. Create a custom role that grants edit access to any stack tagged "demo-team".
+// The PermissionDescriptorCondition checks for the tag key's existence using
+// PermissionExpressionHasTag, then grants stack read/write scopes when it matches.
+const demoTeamRole = new service.OrganizationRole("demo-team-role", {
+  organizationName: orgName,
+  name: "Demo Team Stack Access",
+  description: "Grants edit access to stacks tagged with 'demo-team'.",
+  permissions: {
+    __type: "PermissionDescriptorCondition",
+    condition: {
+      __type: "PermissionExpressionHasTag",
+      key: "demo-team",
+    },
+    subNode: {
+      __type: "PermissionDescriptorAllow",
+      permissions: [
+        "stack:read",
+        "stack:write",
+        "stack:import",
+        "stack:export",
+        "stack:encrypt",
+        "stack:decrypt",
+        "stack:cancel_update",
+        "stack_access:read",
+        "stack_deployment:read",
+        "stack_deployment:create",
+        "stack_deployment_settings:read",
+        "stack_deployment_settings:write",
+        "stack_deployment_settings:encrypt",
+        "stack_tags:update",
+      ],
+    },
+  },
+});
+
+// 3d. Assign the role to the team so that all team members inherit tag-based access.
+const demoTeamRoleAssignment = new service.TeamRoleAssignment("demo-team-role-assignment", {
+  organizationName: orgName,
+  teamName: teamName,
+  roleId: demoTeamRole.roleId,
+}, { dependsOn: [team, demoTeamRole] });
 
 // 4. Grant the team permission to open the ESC environment created by the esc-aws-oidc project's stack.
 const escEnvironmentPermission = new service.TeamEnvironmentPermission("demo-esc-environment-permission", {
